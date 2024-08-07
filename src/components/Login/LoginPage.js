@@ -1,15 +1,31 @@
-// src/components/LoginPage.js
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import './AuthPage.css'; // Add specific styles for auth pages
+import { useNavigate } from 'react-router-dom';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { auth } from '../../services/firebase';
+import './AuthPage.css';
 
-const LoginPage = () => {
+function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // Implement login logic
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      if (user.emailVerified) {
+        navigate('/home'); // Redirect to the home page
+      } else {
+        setError('Please verify your email before logging in.');
+        await signOut(auth); // Sign out the user
+      }
+    } catch (error) {
+      setError(error.message); // Display errors
+    }
   };
 
   return (
@@ -37,10 +53,11 @@ const LoginPage = () => {
             required
           />
           <button type="submit">Login</button>
+          {error && <p className="error-message">{error}</p>}
         </form>
       </motion.div>
     </div>
   );
-};
+}
 
 export default LoginPage;

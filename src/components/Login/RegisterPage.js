@@ -1,14 +1,27 @@
+// src/components/Login/RegisterPage.js
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { auth } from '../../services/firebase';
 import './AuthPage.css';
 
-const RegisterPage = () => {
+function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-   
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await sendEmailVerification(userCredential.user);
+      alert('A verification email has been sent to your email address. Please verify before logging in.');
+      navigate('/login'); // Redirect to login page after registration
+    } catch (error) {
+      setError(error.message); // Display errors
+    }
   };
 
   return (
@@ -36,10 +49,11 @@ const RegisterPage = () => {
             required
           />
           <button type="submit">Register</button>
+          {error && <p className="error-message">{error}</p>}
         </form>
       </motion.div>
     </div>
   );
-};
+}
 
 export default RegisterPage;
